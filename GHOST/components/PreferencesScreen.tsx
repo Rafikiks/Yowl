@@ -1,44 +1,81 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { 
+  View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, ActivityIndicator 
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
+const defaultPreferences = [
+  { id: '1', nom: 'Sport', imageUrl: 'http://localhost:1337/uploads/10371437_2697fe5304.webp' },
+  { id: '2', nom: 'Cuisine', imageUrl: 'http://localhost:1337/uploads/telechargement_1_92979fadcf.jpeg' },
+  { id: '3', nom: 'Jeux & Tech', imageUrl: 'http://localhost:1337/uploads/telechargement_7f1746e255.jpeg' },
+  { id: '4', nom: 'Litterature& Apprentissage', imageUrl: 'http://localhost:1337/uploads/etude_de_l_apprentissage_de_la_litterature_livre_de_pile_j82wbc_ba1b096f09.jpg' },
+  { id: '5', nom: 'Musique', imageUrl: 'http://localhost:1337/uploads/images_8d48246a4d.jpeg' },
+  { id: '6', nom: 'Arts', imageUrl: 'http://localhost:1337/uploads/istockphoto_636761588_612x612_6386b87e5b.jpg' },
+  { id: '7', nom: 'Voyages & Nature', imageUrl: 'http://localhost:1337/uploads/12325430_4db98d52b9.webp' }
+];
+
 const PreferencesScreen: React.FC = () => {
   const navigation = useNavigation();
-  const [darkMode, setDarkMode] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const togglePreference = (id: string) => {
+    setSelectedPreferences((prev) =>
+      prev.includes(id) ? prev.filter((pref) => pref !== id) : [...prev, id]
+    );
+  };
+
+  const savePreferences = async () => {
+    if (selectedPreferences.length === 0) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:1337/api/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: selectedPreferences }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l’enregistrement des préférences.');
+      }
+
+      console.log('Préférences enregistrées avec succès !');
+      navigation.navigate('HomeScreen');
+
+    } catch (error) {
+      console.error('Erreur :', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Preferences</Text>
+      <Text style={styles.title}></Text>
 
-      {/* Changer le mode (clair/sombre) */}
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={() => setDarkMode(!darkMode)}
-      >
-        <Text style={styles.buttonText}>
-          Dark Mode: {darkMode ? 'ON' : 'OFF'}
-        </Text>
-      </TouchableOpacity>
+      <FlatList
+        data={defaultPreferences}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        renderItem={({ item }) => (
+          <TouchableOpacity 
+            style={[
+              styles.card, 
+              selectedPreferences.includes(item.id) && styles.selectedCard
+            ]} 
+            onPress={() => togglePreference(item.id)}
+          >
+            <Image source={{ uri: item.imageUrl }} style={styles.image} />
+            <Text style={styles.itemText}>{item.nom}</Text>
+          </TouchableOpacity>
+        )}
+      />
 
-      {/* Activer/Désactiver les notifications */}
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={() => setNotificationsEnabled(!notificationsEnabled)}
-      >
-        <Text style={styles.buttonText}>
-          Notifications: {notificationsEnabled ? 'ON' : 'OFF'}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Retour à la HomeScreen */}
-      <TouchableOpacity 
-        style={[styles.button, styles.backButton]} 
-        onPress={() => navigation.navigate('HomeScreen')}
-      >
-        <Text style={styles.buttonText}>Back to Home</Text>
+      <TouchableOpacity style={styles.backButton} onPress={savePreferences} disabled={loading}>
+        {loading ? <ActivityIndicator color="black" /> : <Text style={styles.backButtonText}>Next</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -47,33 +84,58 @@ const PreferencesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#161616',
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#161616',
   },
   title: {
-    fontSize: 24,
-    color: 'white',
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 40,
+    color: 'white',
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  button: {
-    width: width * 0.8,
-    height: 50,
-    backgroundColor: '#BB1DF0',
-    borderRadius: 25,
-    justifyContent: 'center',
+  card: {
+    flex: 1,
+    backgroundColor: '#222',
+    borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    padding: 15,
+    margin: 10,
+    width: width * 0.4,
+    height: 150,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedCard: {
+    backgroundColor: '#BB1DF0',
+  },
+  image: {
+    width: 60,
+    height: 60,
+    marginBottom: 10,
+    borderRadius: 10,
+  },
+  itemText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
   },
   backButton: {
+    marginTop: 20,
     backgroundColor: '#D0D5D8',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
   },
-  buttonText: {
+  backButtonText: {
     fontSize: 16,
-    color: 'white',
-    fontWeight: '600',
+    color: 'black',
+    fontWeight: 'bold',
   },
 });
 

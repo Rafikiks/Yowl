@@ -4,18 +4,47 @@ import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
+const API_URL = 'http://localhost:1337/api/auth/local'; // URL API Strapi
+
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
 
-  const handleLogin = () => {
-    Alert.alert('Connexion réussie', 'Tu es maintenant connecté !');
-    navigation.navigate('HomeScreen'); // Redirection après connexion
-  };
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+      return;
+    }
 
-  const handleSignUp = () => {
-    navigation.navigate('RegisterScreen'); // Redirection vers l'inscription
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: email, // Strapi utilise "identifier" pour email ou username
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Succès', 'Connexion réussie !', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('HomeScreen'),
+          },
+        ]);
+      } else {
+        Alert.alert('Erreur', 'Email ou mot de passe incorrect.');
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de contacter le serveur.');
+      console.error(error);
+    }
   };
 
   return (
@@ -61,7 +90,7 @@ const LoginScreen: React.FC = () => {
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+        <TouchableOpacity style={styles.signUpButton} onPress={() => navigation.navigate('RegisterScreen')}>
           <Text style={styles.signUpButtonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>

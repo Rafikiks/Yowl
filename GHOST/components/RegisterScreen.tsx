@@ -4,25 +4,55 @@ import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
+const API_URL = 'http://localhost:1337/api/auth/local/register'; // URL de l'API Strapi
+
 const RegisterScreen: React.FC = () => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigation = useNavigation();
 
-  // Fonction pour traiter l'inscription
-  const handleRegister = () => {
+  // Fonction pour gérer l'inscription avec Strapi
+  const handleRegister = async () => {
+    if (!email || !username || !password) {
+      Alert.alert('Erreur', 'Tous les champs doivent être remplis.');
+      return;
+    }
     if (password !== confirmPassword) {
       Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
       return;
     }
 
-    Alert.alert('Succès', 'Inscription réussie !', [
-      {
-        text: 'OK',
-        onPress: () => navigation.navigate("PreferencesScreen"), // Redirection après inscription
-      },
-    ]);
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Succès', 'Inscription réussie !', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate("PreferencesScreen"),
+          },
+        ]);
+      } else {
+        Alert.alert('Erreur', data.message || "Une erreur est survenue.");
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de contacter le serveur.');
+      console.error(error);
+    }
   };
 
   return (
@@ -32,9 +62,23 @@ const RegisterScreen: React.FC = () => {
         <View style={styles.progressBar}></View>
       </View>
 
+      {/* Champs Username */}
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Username</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.textInput}
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Write here ..."
+            placeholderTextColor="rgba(208, 213, 216, 0.50)"
+          />
+        </View>
+      </View>
+
       {/* Champs Email */}
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Username / E-mail</Text>
+        <Text style={styles.inputLabel}>E-mail</Text>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.textInput}
