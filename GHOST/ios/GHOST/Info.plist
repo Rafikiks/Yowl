@@ -40,6 +40,8 @@
 	<array>
 		<string>arm64</string>
 	</array>
+  <key>UIAppFonts</key>
+  <array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
