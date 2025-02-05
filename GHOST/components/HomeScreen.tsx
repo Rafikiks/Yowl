@@ -16,7 +16,7 @@ const stories = [
 
 // Données des publications
 const posts = [
-  { id: '1', userName: 'User 1', content: 'This is a post!', imageUrl: 'https://example.com/post1.jpg' },
+  { id: '1', userName: '', content: 'This is a post!', imageUrl: 'https://example.com/post1.jpg' },
   { id: '2', userName: 'User 2', content: 'Another post here!', imageUrl: 'https://example.com/post2.jpg' },
   { id: '3', userName: 'User 3', content: 'This is awesome!', imageUrl: 'https://example.com/post3.jpg' },
   // Ajoute d'autres posts ici
@@ -33,47 +33,49 @@ const icons = [
 
 const HomeScreen: React.FC = () => {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header with Message and Like Buttons */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ghost</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Icon name="chatbubble-outline" size={28} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Icon name="heart-outline" size={28} color="white" />
-          </TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Header with Message and Like Buttons */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Ghost</Text>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Icon name="chatbubble-outline" size={28} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <Icon name="heart-outline" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* Stories Section */}
-      <View style={styles.storiesContainer}>
+        {/* Stories Section */}
+        <View style={styles.storiesContainer}>
+          <FlatList
+            horizontal
+            data={stories}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.storyCard}>
+                <Image source={{ uri: item.imageUrl }} style={styles.storyImage} />
+                <Text style={styles.storyName}>{item.name}</Text>
+              </View>
+            )}
+          />
+        </View>
+
+        {/* Publications Section */}
         <FlatList
-          horizontal
-          data={stories}
+          data={posts}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.storyCard}>
-              <Image source={{ uri: item.imageUrl }} style={styles.storyImage} />
-              <Text style={styles.storyName}>{item.name}</Text>
+            <View style={styles.postCard}>
+              <Text style={styles.postUser}>{item.userName}</Text>
+              <Text style={styles.postContent}>{item.content}</Text>
+              <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
             </View>
           )}
         />
-      </View>
-
-      {/* Publications Section */}
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.postCard}>
-            <Text style={styles.postUser}>{item.userName}</Text>
-            <Text style={styles.postContent}>{item.content}</Text>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-          </View>
-        )}
-      />
+      </ScrollView>
 
       {/* Icons Section */}
       <View style={styles.iconContainer}>
@@ -84,15 +86,18 @@ const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         ))}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: '#000', // Fond noir
-    paddingBottom: 60, // Pour donner de l'espace pour les icônes en bas
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 80, // Pour donner plus d'espace pour les icônes en bas
   },
   header: {
     flexDirection: 'row',
@@ -101,6 +106,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
     backgroundColor: '#000',
+    marginTop: 40, // Ajouté pour descendre la barre
   },
   headerTitle: {
     color: 'white',
@@ -161,6 +167,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   iconContainer: {
+    position: 'absolute', // Fixe la barre au bas de l'écran
+    bottom: 10, // Remonte encore la barre de footer
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#222',
