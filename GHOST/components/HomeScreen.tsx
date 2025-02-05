@@ -1,69 +1,99 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, ScrollView 
+  View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, ScrollView, TextInput
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; 
+import Ionicons from 'react-native-vector-icons/Ionicons';  // Importation d'Ionicons
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';  // Importation de FontAwesome5
 
 const { width } = Dimensions.get('window');
 
-// Données des stories
-const stories = [
-  { id: '1', imageUrl: 'https://example.com/story1.jpg', name: 'User 1' },
-  { id: '2', imageUrl: 'https://example.com/story2.jpg', name: 'User 2' },
-  { id: '3', imageUrl: 'https://example.com/story3.jpg', name: 'User 3' },
-  // Ajoute d'autres stories ici
-];
-
-// Données des publications
-const posts = [
-  { id: '1', userName: '', content: 'This is a post!', imageUrl: 'https://example.com/post1.jpg' },
-  { id: '2', userName: 'User 2', content: 'Another post here!', imageUrl: 'https://example.com/post2.jpg' },
-  { id: '3', userName: 'User 3', content: 'This is awesome!', imageUrl: 'https://example.com/post3.jpg' },
-  // Ajoute d'autres posts ici
-];
-
-// Données des icônes en bas
+// Données des icônes en bas (avec les noms des icônes pour Ionicons ou FontAwesome)
 const icons = [
-  { id: '1', name: 'Home', icon: 'home' },
-  { id: '2', name: 'Search', icon: 'search' },
-  { id: '3', name: 'Add', icon: 'add-circle' },
-  { id: '4', name: 'Notifications', icon: 'notifications' },
-  { id: '5', name: 'Profile', icon: 'person' },
+  { id: '1', icon: 'home' },
+  { id: '2', icon: 'search' },
+  { id: '3', icon: 'plus-circle' },
+  { id: '4', icon: 'notifications' },
+  { id: '5', icon: 'person' },
 ];
 
 const HomeScreen: React.FC = () => {
+  const [posts, setPosts] = useState<any[]>([]); // État pour stocker les posts
+  const [newComment, setNewComment] = useState('');  // État pour stocker le nouveau commentaire
+
+  useEffect(() => {
+    // Utilisation de l'API JSONPlaceholder pour récupérer des posts
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+        const data = await response.json();
+
+        // Formater les données pour ajouter une image aléatoire, likes et commentaires
+        const formattedData = data.slice(0, 10).map(post => ({
+          id: post.id.toString(),
+          userName: `User ${post.userId}`,
+          content: post.title,
+          imageUrl: `https://picsum.photos/seed/${post.id}/500/500`,  // Image de taille carrée (format Instagram)
+          isImagePost: Math.random() > 0.5, // Random pour décider si c'est un post avec ou sans image
+          likes: Math.floor(Math.random() * 1000),  // Nombre de likes aléatoire
+          likedByUser: false,  // Ajouter un état pour savoir si l'utilisateur a liké ce post
+          comments: [
+            { userName: 'User1', text: 'Great post!' },
+            { userName: 'User2', text: 'I totally agree with this.' },
+          ],  // Ajouter des commentaires par défaut
+        }));
+        setPosts(formattedData);
+      } catch (error) {
+        console.error("Erreur lors du chargement des posts:", error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const handleLike = (postId: string) => {
+    setPosts(prevPosts =>
+      prevPosts.map(post =>
+        post.id === postId
+          ? { 
+              ...post, 
+              likedByUser: !post.likedByUser,  // Inverser l'état de like pour ce post
+              likes: post.likedByUser ? post.likes - 1 : post.likes + 1 // Augmenter ou diminuer le nombre de likes
+            }
+          : post
+      )
+    );
+  };
+
+  const handleComment = (postId: string) => {
+    if (newComment.trim()) {
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, comments: [...post.comments, { userName: 'CurrentUser', text: newComment }] }
+            : post
+        )
+      );
+      setNewComment('');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Header with Message and Like Buttons */}
+        {/* Header avec les boutons icônes */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Ghost</Text>
           <View style={styles.headerIcons}>
             <TouchableOpacity style={styles.iconButton}>
-              <Icon name="chatbubble-outline" size={28} color="white" />
+              <Ionicons name="chatbubbles" size={28} color="white" />  {/* Icône de chat */}
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton}>
-              <Icon name="heart-outline" size={28} color="white" />
+              <FontAwesome5 name="heart" size={28} color="white" />  {/* Icône de coeur */}
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Stories Section */}
-        <View style={styles.storiesContainer}>
-          <FlatList
-            horizontal
-            data={stories}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.storyCard}>
-                <Image source={{ uri: item.imageUrl }} style={styles.storyImage} />
-                <Text style={styles.storyName}>{item.name}</Text>
-              </View>
-            )}
-          />
-        </View>
-
-        {/* Publications Section */}
+        {/* Publication Section */}
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
@@ -71,18 +101,73 @@ const HomeScreen: React.FC = () => {
             <View style={styles.postCard}>
               <Text style={styles.postUser}>{item.userName}</Text>
               <Text style={styles.postContent}>{item.content}</Text>
-              <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+              
+              {/* Vérifier si le post contient une image ou non */}
+              {item.isImagePost ? (
+                <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+              ) : (
+                <View style={styles.postTextContainer}>
+                  <Text style={styles.postText}>This is a text-only post.</Text>
+                </View>
+              )}
+
+              {/* Section des likes et commentaires */}
+              <View style={styles.postActions}>
+                <TouchableOpacity onPress={() => handleLike(item.id)} style={styles.actionContainer}>
+                  <Ionicons 
+                    name={item.likedByUser ? "heart" : "heart-outline"}  // Icône remplie ou outline selon le like
+                    size={20} 
+                    color={item.likedByUser ? "red" : "white"}  // Couleur rouge si liké, sinon blanc
+                  />
+                  <Text style={styles.actionText}>{item.likes} Likes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionContainer}>
+                  <Ionicons name="chatbubble" size={20} color="white" />
+                  <Text style={styles.actionText}>{item.comments.length} Comments</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Section des commentaires */}
+              <View style={styles.commentSection}>
+                <Text style={styles.commentTitle}>Comments:</Text>
+                {item.comments.map((comment, index) => (
+                  <View key={index} style={styles.commentContainer}>
+                    <Text style={styles.commentUser}>{comment.userName}:</Text>
+                    <Text style={styles.commentText}>{comment.text}</Text>
+                  </View>
+                ))}
+
+                {/* Champ pour ajouter un commentaire */}
+                <View style={styles.commentInputContainer}>
+                  <TextInput
+                    style={styles.commentInput}
+                    value={newComment}
+                    onChangeText={setNewComment}
+                    placeholder="Add a comment..."
+                    placeholderTextColor="#aaa"
+                  />
+                  <TouchableOpacity 
+                    onPress={() => handleComment(item.id)} 
+                    style={styles.commentButton}
+                  >
+                    <Text style={styles.commentButtonText}>Post</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           )}
         />
       </ScrollView>
 
-      {/* Icons Section */}
+      {/* Footer Section avec les icônes */}
       <View style={styles.iconContainer}>
         {icons.map((icon) => (
           <TouchableOpacity key={icon.id} style={styles.iconButton}>
-            <Icon name={icon.icon} size={28} color="white" />
-            <Text style={styles.iconName}>{icon.name}</Text>
+            <Ionicons 
+              name={icon.icon}  // Utilisation de l'icône venant de react-native-vector-icons
+              size={28} 
+              color="white" 
+            />
           </TouchableOpacity>
         ))}
       </View>
@@ -93,11 +178,11 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000', // Fond noir
+    backgroundColor: '#000',
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 80, // Pour donner plus d'espace pour les icônes en bas
+    paddingBottom: 80,
   },
   header: {
     flexDirection: 'row',
@@ -106,7 +191,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
     backgroundColor: '#000',
-    marginTop: 40, // Ajouté pour descendre la barre
+    marginTop: 20,
   },
   headerTitle: {
     color: 'white',
@@ -119,26 +204,6 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     marginLeft: 20,
-  },
-  storiesContainer: {
-    paddingVertical: 10,
-    paddingLeft: 10,
-    marginBottom: 20,
-  },
-  storyCard: {
-    marginRight: 15,
-    alignItems: 'center',
-  },
-  storyImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-  },
-  storyName: {
-    marginTop: 5,
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: 'white',
   },
   postCard: {
     backgroundColor: '#222',
@@ -163,28 +228,78 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 200,
+    height: 400,  // Hauteur de l'image pour ressembler à Instagram
     borderRadius: 10,
   },
+  postActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 14,
+    marginLeft: 5,
+  },
+  commentSection: {
+    marginTop: 20,
+  },
+  commentTitle: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  commentContainer: {
+    marginBottom: 10,
+  },
+  commentUser: {
+    color: '#aaa',
+    fontWeight: 'bold',
+  },
+  commentText: {
+    color: 'white',
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: '#333',
+    color: 'white',
+    padding: 10,
+    borderRadius: 20,
+  },
+  commentButton: {
+    backgroundColor: '#444',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    marginLeft: 10,
+    borderRadius: 20,
+  },
+  commentButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   iconContainer: {
-    position: 'absolute', // Fixe la barre au bas de l'écran
-    bottom: 10, // Remonte encore la barre de footer
+    position: 'absolute',
+    bottom: 0, // La barre est fixée au bas de l'écran
     left: 0,
     right: 0,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#222',
-    paddingVertical: 10,
+    justifyContent: 'space-between',  // Les icônes sont espacées de manière égale
+    alignItems: 'center',  // Alignement vertical des icônes
+    backgroundColor: '#222',  // Fond noir
+    paddingVertical: 15,  // Un peu plus de padding vertical pour augmenter la taille de la barre
     borderTopWidth: 1,
     borderTopColor: '#444',
-  },
-  iconButton: {
-    alignItems: 'center',
-  },
-  iconName: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: 'white',
+    paddingHorizontal: 30,  // Espacement horizontal entre les icônes
+    height: 80,  // Hauteur de la barre des icônes
   },
 });
 
