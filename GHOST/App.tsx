@@ -7,6 +7,7 @@ import RegisterScreen from './components/RegisterScreen';
 import LoginScreen from './components/LoginScreen';
 import PreferencesScreen from './components/PreferencesScreen';
 import HomeScreen from './components/HomeScreen';
+import VideoFeedScreen from './components/VideoFeedScreen'; // Importer VideoFeedScreen
 import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -23,6 +24,7 @@ const App: React.FC = () => {
         <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="PreferencesScreen" component={PreferencesScreen} />
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="VideoFeedScreen" component={VideoFeedScreen} /> {/* Ajouter VideoFeedScreen */}
       </Stack.Navigator>
     </NavigationContainer>
   );

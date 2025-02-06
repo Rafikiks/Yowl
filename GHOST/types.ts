@@ -1,7 +1,8 @@
 export type RootStackParamList = {
   WelcomeScreen: undefined;
-  LoginScreen: undefined;
   RegisterScreen: undefined;
+  LoginScreen: undefined;
   PreferencesScreen: undefined;
   HomeScreen: undefined;
+  VideoFeedScreen: undefined; // Ajouter VideoFeedScreen
 };

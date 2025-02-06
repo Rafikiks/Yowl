@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, ScrollView, TextInput
+  View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, ScrollView, TextInput, Animated
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Importer useNavigation
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Importation d'Ionicons
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';  // Importation de FontAwesome5
 
@@ -17,8 +18,12 @@ const icons = [
 ];
 
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation(); // Utiliser useNavigation pour obtenir l'objet de navigation
   const [posts, setPosts] = useState<any[]>([]); // État pour stocker les posts
   const [newComment, setNewComment] = useState('');  // État pour stocker le nouveau commentaire
+  const [selectedTab, setSelectedTab] = useState('Posts'); // État pour gérer l'onglet sélectionné
+  const [isAnonymous, setIsAnonymous] = useState(false); // État pour gérer le mode anonyme
+  const [animatedValue] = useState(new Animated.Value(2)); // Valeur animée pour le bouton anonyme
 
   useEffect(() => {
     // Utilisation de l'API JSONPlaceholder pour récupérer des posts
@@ -77,18 +82,46 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const toggleAnonymousMode = () => {
+    setIsAnonymous(!isAnonymous);
+    Animated.timing(animatedValue, {
+      toValue: isAnonymous ? 2 : 33,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header avec les boutons icônes */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Ghost</Text>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="chatbubbles" size={28} color="white" />  {/* Icône de chat */}
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="chatbubbles" size={28} color="white" />  {/* Icône de chat */}
+          </TouchableOpacity>
+          <View style={styles.headerTabs}>
+            <TouchableOpacity 
+              style={styles.tabButton} 
+              onPress={() => setSelectedTab('Posts')}
+            >
+              <Text style={styles.tabText}>Posts</Text>
+              {selectedTab === 'Posts' && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <FontAwesome5 name="heart" size={28} color="white" />  {/* Icône de coeur */}
+            <TouchableOpacity 
+              style={styles.tabButton} 
+              onPress={() => {
+                setSelectedTab('Vidéos');
+                navigation.navigate('VideoFeedScreen'); // Rediriger vers VideoFeedScreen
+              }}
+            >
+              <Text style={styles.tabText}>Vidéos</Text>
+              {selectedTab === 'Vidéos' && <View style={styles.tabIndicator} />}
+            </TouchableOpacity>
+          </View>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity style={styles.customButtonContainer} onPress={toggleAnonymousMode}>
+              <View style={styles.customButtonBackground} />
+              <Animated.View style={[styles.customButtonForeground, { left: animatedValue }, isAnonymous && styles.customButtonForegroundActive]} />
             </TouchableOpacity>
           </View>
         </View>
@@ -99,7 +132,10 @@ const HomeScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.postCard}>
-              <Text style={styles.postUser}>{item.userName}</Text>
+              <View style={styles.postHeader}>
+                <Image source={{ uri: `https://via.placeholder.com/35x35` }} style={styles.profileImage} />
+                <Text style={styles.postUser}>{item.userName}</Text>
+              </View>
               <Text style={styles.postContent}>{item.content}</Text>
               
               {/* Vérifier si le post contient une image ou non */}
@@ -178,7 +214,7 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#161616',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -189,21 +225,71 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    backgroundColor: '#000',
-    marginTop: 20,
+    borderBottomColor: 'rgba(208, 213, 216, 0.50)',
+    backgroundColor: '#161616',
+    marginTop: 60, // Augmenter la marge supérieure pour abaisser encore plus le header
   },
-  headerTitle: {
+  headerTabs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+  },
+  tabButton: {
+    paddingLeft: 24,
+    paddingRight: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabText: {
     color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontFamily: 'SF Pro Text',
+    fontWeight: '400',
+    wordWrap: 'break-word',
+  },
+  tabIndicator: {
+    width: 28,
+    height: 1,
+    backgroundColor: 'white',
+    marginTop: 4,
   },
   headerIcons: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconButton: {
+    marginRight: 20,
+  },
+  customButtonContainer: {
+    width: 66,
+    height: 35,
+    position: 'relative',
+    backgroundColor: '#252525',
+    borderRadius: 17.5,
+    overflow: 'hidden',
     marginLeft: 20,
+  },
+  customButtonBackground: {
+    width: 62,
+    height: 31,
+    position: 'absolute',
+    backgroundColor: 'rgba(217, 217, 217, 0.50)',
+    borderRadius: 30,
+    left: 2,
+    top: 2,
+  },
+  customButtonForeground: {
+    width: 31,
+    height: 31,
+    position: 'absolute',
+    backgroundColor: '#D9D9D9',
+    borderRadius: 15.5,
+    top: 2,
+  },
+  customButtonForegroundActive: {
+    backgroundColor: '#BB1DF0',
   },
   postCard: {
     backgroundColor: '#222',
@@ -216,15 +302,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  profileImage: {
+    width: 35,
+    height: 35,
+    borderRadius: 17.5,
+    borderWidth: 2,
+    borderColor: '#BB1DF0',
+    marginRight: 10,
+  },
   postUser: {
-    fontWeight: 'bold',
-    marginBottom: 5,
     color: 'white',
+    fontSize: 16,
+    fontFamily: 'SF Pro Rounded',
+    fontWeight: '400',
+    wordWrap: 'break-word',
   },
   postContent: {
-    fontSize: 14,
-    marginBottom: 10,
+    fontSize: 12,
     color: 'white',
+    fontFamily: 'SF Pro Rounded',
+    fontWeight: '400',
+    wordWrap: 'break-word',
+    marginBottom: 10,
   },
   postImage: {
     width: '100%',
@@ -242,7 +346,9 @@ const styles = StyleSheet.create({
   },
   actionText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
+    fontFamily: 'SF Pro Rounded',
+    fontWeight: '400',
     marginLeft: 5,
   },
   commentSection: {
@@ -294,12 +400,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',  // Les icônes sont espacées de manière égale
     alignItems: 'center',  // Alignement vertical des icônes
-    backgroundColor: '#222',  // Fond noir
-    paddingVertical: 15,  // Un peu plus de padding vertical pour augmenter la taille de la barre
-    borderTopWidth: 1,
-    borderTopColor: '#444',
-    paddingHorizontal: 30,  // Espacement horizontal entre les icônes
-    height: 80,  // Hauteur de la barre des icônes
+    backgroundColor: 'rgba(13, 13, 13, 0.85)',  // Fond noir avec opacité
+    paddingVertical: 14,  // Padding vertical pour augmenter la taille de la barre
+    borderTopWidth: 0.5,
+    borderTopColor: '#B2B2B2',
+    paddingHorizontal: 36,  // Espacement horizontal entre les icônes
+    height: 74,  // Hauteur de la barre des icônes
+    backdropFilter: 'blur(15px)',  // Effet de flou
   },
 });
 
