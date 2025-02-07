@@ -96,7 +96,7 @@ const HomeScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header avec les boutons icônes */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('ConversationScreen')}>
             <Ionicons name="chatbubbles" size={28} color="white" />  {/* Icône de chat */}
           </TouchableOpacity>
           <View style={styles.headerTabs}>
@@ -196,16 +196,24 @@ const HomeScreen: React.FC = () => {
       </ScrollView>
 
       {/* Footer Section avec les icônes */}
-      <View style={styles.iconContainer}>
-        {icons.map((icon) => (
-          <TouchableOpacity key={icon.id} style={styles.iconButton}>
-            <Ionicons 
-              name={icon.icon}  // Utilisation de l'icône venant de react-native-vector-icons
-              size={28} 
-              color="white" 
-            />
+      <View style={styles.navBar}>
+        <View style={styles.navBarContent}>
+          <TouchableOpacity style={[styles.navBarItem, styles.homeContainer]} onPress={() => navigation.navigate('HomeScreen')}>
+            <Ionicons name="home-outline" size={28} color="white" />
           </TouchableOpacity>
-        ))}
+          <TouchableOpacity style={[styles.navBarItem, styles.searchContainer]} onPress={() => navigation.navigate('SearchScreen')}>
+            <Ionicons name="search-outline" size={28} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navBarItem, styles.communitiesContainer]} onPress={() => navigation.navigate('CommunitiesScreen')}>
+            <Ionicons name="people-outline" size={28} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navBarItem, styles.userCountContainer]} onPress={() => navigation.navigate('UserCountScreen')}>
+            <Ionicons name="stats-chart-outline" size={28} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.navBarItem, styles.profileContainer]} onPress={() => navigation.navigate('ProfileScreen')}>
+            <Ionicons name="person-circle-outline" size={35} color="#BB1DF0" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -247,7 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'SF Pro Text',
     fontWeight: '400',
-    wordWrap: 'break-word',
+    flexWrap: 'wrap',
   },
   tabIndicator: {
     width: 28,
@@ -398,21 +406,50 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  iconContainer: {
+  navBar: {
+    width: '100%',
+    paddingTop: 14,
+    paddingBottom: 50, // Augmenter encore la hauteur de la barre de navigation
+    paddingLeft: 36,
+    paddingRight: 37,
+    backgroundColor: '#161616',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(208, 213, 216, 0.50)',
+    justifyContent: 'center',
+    alignItems: 'center',
     position: 'absolute',
-    bottom: 0, // La barre est fixée au bas de l'écran
+    bottom: 0,
+  },
+  navBarContent: {
+    width: 320,
+    position: 'relative',
+  },
+  navBarItem: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+  },
+  homeContainer: {
     left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',  // Les icônes sont espacées de manière égale
-    alignItems: 'center',  // Alignement vertical des icônes
-    backgroundColor: 'rgba(13, 13, 13, 0.85)',  // Fond noir avec opacité
-    paddingVertical: 14,  // Padding vertical pour augmenter la taille de la barre
-    borderTopWidth: 0.5,
-    borderTopColor: '#B2B2B2',
-    paddingHorizontal: 36,  // Espacement horizontal entre les icônes
-    height: 74,  // Hauteur de la barre des icônes
-    backdropFilter: 'blur(15px)',  // Effet de flou
+    top: 0,
+  },
+  searchContainer: {
+    left: 95,
+    top: 0,
+  },
+  communitiesContainer: {
+    left: 190,
+    top: 0,
+  },
+  userCountContainer: {
+    left: 285,
+    top: 0,
+  },
+  profileContainer: {
+    left: 380,
+    top: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

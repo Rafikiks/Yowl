@@ -8,6 +8,7 @@ import LoginScreen from './components/LoginScreen';
 import PreferencesScreen from './components/PreferencesScreen';
 import HomeScreen from './components/HomeScreen';
 import VideoFeedScreen from './components/VideoFeedScreen'; // Import de la nouvelle page
+import ConversationScreen from './components/ConversationsScreen'; // Import de la nouvelle page
 import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -25,6 +26,7 @@ const App: React.FC = () => {
         <Stack.Screen name="PreferencesScreen" component={PreferencesScreen} />
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
         <Stack.Screen name="VideoFeedScreen" component={VideoFeedScreen} /> 
+        <Stack.Screen name="ConversationScreen" component={ConversationScreen} /> 
       </Stack.Navigator>
     </NavigationContainer>
   );
