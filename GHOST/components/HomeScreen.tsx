@@ -33,7 +33,7 @@ const HomeScreen: React.FC = () => {
         const data = await response.json();
 
         // Formater les données pour ajouter une image aléatoire, likes et commentaires
-        const formattedData = data.slice(0, 10).map(post => ({
+        const formattedData = data.slice(0, 10).map((post: { id: { toString: () => any; }; userId: any; title: any; }) => ({
           id: post.id.toString(),
           userName: `User ${post.userId}`,
           content: post.title,
@@ -111,7 +111,7 @@ const HomeScreen: React.FC = () => {
               style={styles.tabButton} 
               onPress={() => {
                 setSelectedTab('Vidéos');
-                navigation.navigate('VideoFeedScreen'); // Rediriger vers VideoFeedScreen
+                navigation.navigate('VideoFeedScreen' as never); // Rediriger vers VideoFeedScreen
               }}
             >
               <Text style={styles.tabText}>Vidéos</Text>
@@ -338,6 +338,12 @@ const styles = StyleSheet.create({
   postActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  postTextContainer: {
+    padding: 10,
+    backgroundColor: '#333',
+    borderRadius: 10,
     marginTop: 10,
   },
   actionContainer: {

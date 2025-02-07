@@ -1,48 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Video from 'react-native-video'; // Importation du composant Video
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Importation des icônes
+import { useNavigation, useIsFocused } from '@react-navigation/native';
+import Video from 'react-native-video'; 
+import Ionicons from 'react-native-vector-icons/Ionicons'; 
+import DocumentPicker from 'react-native-document-picker'; 
 
 const { width, height } = Dimensions.get('window');
 
-// Liste initiale des vidéos locales (MP4)
+// 📂 Liste des vidéos locales
 const initialVideos = [
-  { id: '1', videoUrl: require('../assets/vidéo1.mp4') }, // Exemple de vidéo locale
-  // Ajoutez plus de vidéos ici
+  { id: '1', videoUrl: require('../assets/vidéo1.mp4') },
+  
+  { id: '3', videoUrl: require('../assets/vidéo3.mp4') }, 
 ];
 
 const VideoFeedScreen: React.FC = () => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused(); 
   const [videos, setVideos] = useState(initialVideos);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const videoRefs = useRef<Video[]>([]); 
 
-  const loadMoreVideos = () => {
-    if (!loadingMore) {
-      setLoadingMore(true);
-      // Simuler le chargement de plus de vidéos
-      setTimeout(() => {
-        const moreVideos = [
-          { id: (videos.length + 1).toString(), videoUrl: require('../assets/vidéo1.mp4') },
-          // Ajoutez plus de vidéos ici
-        ];
-        setVideos([...videos, ...moreVideos]);
-        setLoadingMore(false);
-      }, 1500);
+  // 📂 Ajouter une vidéo depuis les fichiers
+  const addVideo = async () => {
+    try {
+      const res = await DocumentPicker.pickSingle({
+        type: DocumentPicker.types.video,
+      });
+      setVideos([...videos, { id: (videos.length + 1).toString(), videoUrl: res.uri }]);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log("Sélection annulée");
+      } else {
+        console.error("Erreur lors de la sélection de la vidéo : ", err);
+      }
     }
   };
 
-  const renderItem = ({ item }: { item: { id: string; videoUrl: any } }) => (
+  const handleViewableItemsChanged = ({ viewableItems }: { viewableItems: any }) => {
+    if (viewableItems.length > 0) {
+      const index = viewableItems[0].index;
+      setCurrentVideoIndex(index);
+    }
+  };
+
+  const renderItem = ({ item, index }: { item: { id: string; videoUrl: any }, index: number }) => (
     <View style={styles.videoCard}>
       <Video
-        source={item.videoUrl} // Utilisation du fichier local
+        ref={(ref) => (videoRefs.current[index] = ref!)}
+        source={typeof item.videoUrl === 'string' ? { uri: item.videoUrl } : item.videoUrl}
         style={styles.video}
         resizeMode="cover"
         controls
+        paused={!isFocused || currentVideoIndex !== index}
         onLoadStart={() => setLoading(true)}
         onLoad={() => setLoading(false)}
-        onError={(error) => console.log("Video load error: ", error)} // Gérer les erreurs
+        onError={(error) => console.log("Erreur de lecture de la vidéo : ", error)}
       />
       {loading && <ActivityIndicator size="large" color="#BB1DF0" style={styles.loader} />}
       <View style={styles.videoOverlay}>
@@ -76,14 +91,19 @@ const VideoFeedScreen: React.FC = () => {
           <View style={styles.tabIndicator} />
         </TouchableOpacity>
       </View>
+
+      {/* 📂 Bouton pour ajouter une vidéo */}
+      <TouchableOpacity style={styles.addButton} onPress={addVideo}>
+        <Text style={styles.addButtonText}>+ Ajouter une Vidéo</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={videos}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        onEndReached={loadMoreVideos}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={loadingMore ? <ActivityIndicator size="large" color="#BB1DF0" /> : <View style={{ height: 20 }} />}
         pagingEnabled
+        onViewableItemsChanged={handleViewableItemsChanged}
+        viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
       />
     </View>
   );
@@ -99,9 +119,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 10,
-    backgroundColor: 'transparent', // Fond transparent
     position: 'absolute',
-    top: 40, // Positionner plus bas
+    top: 40,
     width: '100%',
     zIndex: 1,
   },
@@ -114,13 +133,11 @@ const styles = StyleSheet.create({
   tabText: {
     color: 'white',
     fontSize: 20,
-    fontFamily: 'SF Pro Text',
     fontWeight: '400',
   },
   tabTextActive: {
     color: 'white',
     fontSize: 20,
-    fontFamily: 'SF Pro Text',
     fontWeight: '700',
   },
   tabIndicator: {
@@ -128,6 +145,19 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'white',
     marginTop: 4,
+  },
+  addButton: {
+    backgroundColor: '#BB1DF0',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    margin: 20,
+    marginTop: 80, 
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   videoCard: {
     width: width,
@@ -159,13 +189,11 @@ const styles = StyleSheet.create({
   headerText: {
     color: 'white',
     fontSize: 18,
-    fontFamily: 'SF Pro Rounded',
     fontWeight: '600',
   },
   subHeaderText: {
     color: 'white',
     fontSize: 14,
-    fontFamily: 'SF Pro Text',
     fontWeight: '400',
   },
   videoFooter: {

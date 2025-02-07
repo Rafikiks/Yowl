@@ -25,7 +25,7 @@ const WelcomeScreen: React.FC = () => {
       {/* Bouton Next */}
       <TouchableOpacity 
         style={styles.nextButton} 
-        onPress={() => navigation.navigate('RegisterScreen')}
+        onPress={() => navigation.navigate('LoginScreen')}
       >
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
